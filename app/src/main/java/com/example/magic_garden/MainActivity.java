@@ -1,66 +1,55 @@
 package com.example.magic_garden;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private int gridSize = 8; // Change this to scale the grid size
+    private int gridSize = 7; // For example, a 7x7 grid
     private char[][] letters;
     private boolean[][] visited;
     private StringBuilder currentWord = new StringBuilder();
     private GridLayout gridLayout;
+    private TextView currentWordTextView;
+    private TextView scoreTextView;
     private Button enterButton;
+    private HashSet<String> dictionary = new HashSet<>();
+    private int score = 0;  // Initialize the score at the beginning
+
+    // List to track selected letters' positions
+    private ArrayList<int[]> selectedLetters = new ArrayList<>();
+    // Array to store references to TextViews in the GridLayout
+    private TextView[][] letterTextViews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialize views
         gridLayout = findViewById(R.id.gridLayout);
+        currentWordTextView = findViewById(R.id.currentWordTextView);
+        scoreTextView = findViewById(R.id.scoreTextView);
         enterButton = findViewById(R.id.enterButton);
+
         gridLayout.setColumnCount(gridSize);
         gridLayout.setRowCount(gridSize);
 
         letters = generateRandomLetters(gridSize);
         visited = new boolean[gridSize][gridSize];
+        letterTextViews = new TextView[gridSize][gridSize];
+        loadDictionary();
 
         initializeGrid();
-        setupEnterButton();
+        setupEnterButton();  // Ensure this method is called
     }
-
-    private void setupEnterButton() {
-        enterButton.setOnClickListener(v -> {
-            String formedWord = currentWord.toString();
-            if (isValidWord(formedWord)) {
-                // Handle valid word: update score, reset grid, etc.
-                System.out.println("Valid word: " + formedWord);
-            } else {
-                // Handle invalid word
-                System.out.println("Invalid word: " + formedWord);
-            }
-            resetGrid();
-        });
-    }
-
-    private void resetGrid() {
-        // Reset the current word and visited flags
-        currentWord.setLength(0);
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
-                visited[i][j] = false;
-            }
-        }
-        // Optionally, refresh the UI to reflect the reset
-    }
-
-    private boolean isValidWord(String word) {
-        // Placeholder: Implement actual dictionary check here
-        return word.length() > 1; // Example check
-    }
-
 
     private char[][] generateRandomLetters(int size) {
         char[][] tempLetters = new char[size][size];
@@ -70,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return tempLetters;
+    }
+
+    private void loadDictionary() {
+        String[] words = getResources().getStringArray(R.array.dictionary_words);
+        dictionary.addAll(Arrays.asList(words));  // Adding words to the HashSet
     }
 
     private void initializeGrid() {
@@ -86,19 +80,87 @@ public class MainActivity extends AppCompatActivity {
 
                 final int finalRow = row;
                 final int finalCol = col;
-                textView.setOnClickListener(v -> handleLetterClick(finalRow, finalCol));
+                textView.setOnClickListener(v -> {
+                    handleLetterClick(finalRow, finalCol, textView);
+                });
                 gridLayout.addView(textView);
+                letterTextViews[row][col] = textView; // Store the reference to the TextView
             }
         }
     }
 
-    private void handleLetterClick(int row, int col) {
-        if (visited[row][col]) {
-            return;
+    private void handleLetterClick(int row, int col, TextView textView) {
+        if (!visited[row][col]) {  // Check if the letter has not been used yet
+            visited[row][col] = true;  // Mark this cell as visited
+            currentWord.append(letters[row][col]);  // Append the letter to the current word
+            selectedLetters.add(new int[]{row, col});  // Track the selected letter's position
+            textView.setTextColor(getResources().getColor(android.R.color.holo_blue_light));  // Change text color to indicate selection
+            updateCurrentWordView();  // Update the display to show the new current word
         }
-        visited[row][col] = true;
-        currentWord.append(letters[row][col]);
-        System.out.println("Current word: " + currentWord);
-        // Reset or further process the word here
+    }
+
+    private char generateRandomLetter() {
+        return (char) ('A' + Math.random() * 26);  // Generate a random letter from A to Z
+    }
+
+    private void updateCurrentWordView() {
+        currentWordTextView.setText(currentWord.toString());  // Set the text of the TextView to the current word
+    }
+
+    private void setupEnterButton() {
+        System.out.println("Setting up enter button...");  // Debug message
+        enterButton.setOnClickListener(new View.OnClickListener() {  // Ensure the correct usage of setOnClickListener
+            @Override
+            public void onClick(View v) {
+                System.out.println("Enter button clicked!");  // Debug message
+                String formedWord = currentWord.toString().toUpperCase();
+                if (isValidWord(formedWord)) {
+                    score += formedWord.length() * 5; // Update the score calculation
+                    System.out.println("Valid word: " + formedWord + ", Score: " + score);
+                    replaceSelectedLetters();  // Replace the letters used to form the word
+                } else {
+                    System.out.println("Invalid word: " + formedWord);
+                }
+                updateScoreDisplay();  // Update the score display
+                resetGrid();  // Reset the grid after processing the word
+            }
+        });
+    }
+
+    private void updateScoreDisplay() {
+        scoreTextView.setText("Score: " + score);  // Update the TextView to show the current score
+    }
+
+    private void replaceSelectedLetters() {
+        System.out.println("Replacing selected letters...");  // Debug message
+        for (int[] position : selectedLetters) {
+            int row = position[0];
+            int col = position[1];
+            char newLetter = generateRandomLetter();  // Generate a new letter
+            letters[row][col] = newLetter;  // Update the letters array
+            TextView textView = letterTextViews[row][col];
+            textView.setText(String.valueOf(newLetter));  // Update the TextView with the new letter
+            textView.setTextColor(getResources().getColor(android.R.color.black));  // Reset text color
+            visited[row][col] = false;  // Reset visited status
+            System.out.println("Updated (" + row + ", " + col + ") to " + newLetter);  // Debug message
+        }
+        selectedLetters.clear();  // Clear the list of selected letters
+    }
+
+    private boolean isValidWord(String word) {
+        return dictionary.contains(word);
+    }
+
+    private void resetGrid() {
+        currentWord.setLength(0);
+        updateCurrentWordView();  // Update the display to show no current word
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                visited[i][j] = false;
+                TextView textView = letterTextViews[i][j];
+                textView.setEnabled(true);  // Ensure all TextViews are re-enabled
+                textView.setTextColor(getResources().getColor(android.R.color.black)); // Ensure color reset
+            }
+        }
     }
 }

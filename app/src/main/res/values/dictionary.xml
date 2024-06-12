@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dictionary_words">
+        <item>APPLE</item>
+        <item>BANANA</item>
+        <item>CHERRY</item>
+        <item>C</item>
+    </string-array>
+</resources>
