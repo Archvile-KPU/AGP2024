@@ -1,6 +1,7 @@
 package com.example.magic_garden;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -22,11 +23,16 @@ public class MainActivity extends AppCompatActivity {
     private Button enterButton;
     private HashSet<String> dictionary = new HashSet<>();
     private int score = 0;  // Initialize the score at the beginning
+    private int coins = 0;  // Initialize the coins
 
     // List to track selected letters' positions
     private ArrayList<int[]> selectedLetters = new ArrayList<>();
     // Array to store references to TextViews in the GridLayout
     private TextView[][] letterTextViews;
+
+    // Timer variables
+    private CountDownTimer gameTimer;
+    private long gameTimeInMillis = 60000;  // 1 minute in milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
 
         initializeGrid();
         setupEnterButton();  // Ensure this method is called
+
+        startGameTimer();  // Start the game timer
     }
 
     private char[][] generateRandomLetters(int size) {
@@ -117,10 +125,10 @@ public class MainActivity extends AppCompatActivity {
                 if (isValidWord(formedWord)) {
                     score += formedWord.length() * 5; // Update the score calculation
                     System.out.println("Valid word: " + formedWord + ", Score: " + score);
-                    replaceSelectedLetters();  // Replace the letters used to form the word
                 } else {
                     System.out.println("Invalid word: " + formedWord);
                 }
+                replaceSelectedLetters();  // Always replace the letters used to form the word
                 updateScoreDisplay();  // Update the score display
                 resetGrid();  // Reset the grid after processing the word
             }
@@ -162,5 +170,23 @@ public class MainActivity extends AppCompatActivity {
                 textView.setTextColor(getResources().getColor(android.R.color.black)); // Ensure color reset
             }
         }
+    }
+
+    private void startGameTimer() {
+        gameTimer = new CountDownTimer(gameTimeInMillis, 1000) {
+            public void onTick(long millisUntilFinished) {
+                // Update UI with the remaining time if needed
+            }
+
+            public void onFinish() {
+                endGame();
+            }
+        }.start();
+    }
+
+    private void endGame() {
+        coins += score;  // Add the current score to coins
+        System.out.println("Game over! Coins earned: " + coins);  // Debug message
+        // Optionally, reset the game or navigate to another activity/screen
     }
 }
