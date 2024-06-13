@@ -1,5 +1,7 @@
 package com.example.magic_garden;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
@@ -18,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean[][] visited;
     private StringBuilder currentWord = new StringBuilder();
     private GridLayout gridLayout;
+    private TextView timerTextView;
     private TextView currentWordTextView;
     private TextView scoreTextView;
     private Button enterButton;
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize views
         gridLayout = findViewById(R.id.gridLayout);
+        timerTextView = findViewById(R.id.timerTextView);
         currentWordTextView = findViewById(R.id.currentWordTextView);
         scoreTextView = findViewById(R.id.scoreTextView);
         enterButton = findViewById(R.id.enterButton);
@@ -55,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
         initializeGrid();
         setupEnterButton();  // Ensure this method is called
+
+        loadCoins();  // Load coins from SharedPreferences
 
         startGameTimer();  // Start the game timer
     }
@@ -125,12 +131,13 @@ public class MainActivity extends AppCompatActivity {
                 if (isValidWord(formedWord)) {
                     score += formedWord.length() * 5; // Update the score calculation
                     System.out.println("Valid word: " + formedWord + ", Score: " + score);
+                    replaceSelectedLetters();  // Replace the letters used to form the word
                 } else {
                     System.out.println("Invalid word: " + formedWord);
+                    resetGrid(false);  // Reset the grid without replacing letters
                 }
-                replaceSelectedLetters();  // Always replace the letters used to form the word
                 updateScoreDisplay();  // Update the score display
-                resetGrid();  // Reset the grid after processing the word
+                clearCurrentWord();  // Clear the current word in the TextView
             }
         });
     }
@@ -159,8 +166,7 @@ public class MainActivity extends AppCompatActivity {
         return dictionary.contains(word);
     }
 
-    private void resetGrid() {
-        currentWord.setLength(0);
+    private void resetGrid(boolean resetLetters) {
         updateCurrentWordView();  // Update the display to show no current word
         for (int i = 0; i < gridSize; i++) {
             for (int j = 0; j < gridSize; j++) {
@@ -168,14 +174,25 @@ public class MainActivity extends AppCompatActivity {
                 TextView textView = letterTextViews[i][j];
                 textView.setEnabled(true);  // Ensure all TextViews are re-enabled
                 textView.setTextColor(getResources().getColor(android.R.color.black)); // Ensure color reset
+                if (resetLetters) {
+                    letters[i][j] = generateRandomLetter();
+                    textView.setText(String.valueOf(letters[i][j]));  // Update the TextView with the new letter
+                }
             }
         }
+    }
+
+    private void clearCurrentWord() {
+        currentWord.setLength(0);
+        updateCurrentWordView();
     }
 
     private void startGameTimer() {
         gameTimer = new CountDownTimer(gameTimeInMillis, 1000) {
             public void onTick(long millisUntilFinished) {
-                // Update UI with the remaining time if needed
+                // Update the timer display
+                long secondsRemaining = millisUntilFinished / 1000;
+                timerTextView.setText("Time: " + secondsRemaining);
             }
 
             public void onFinish() {
@@ -187,6 +204,22 @@ public class MainActivity extends AppCompatActivity {
     private void endGame() {
         coins += score;  // Add the current score to coins
         System.out.println("Game over! Coins earned: " + coins);  // Debug message
-        // Optionally, reset the game or navigate to another activity/screen
+        saveCoins();  // Save coins to SharedPreferences
+        Intent intent = new Intent(MainActivity.this, GardenActivity.class);
+        intent.putExtra("COINS", coins);
+        startActivity(intent);
+        finish();  // Finish the current activity to prevent the user from going back
+    }
+
+    private void loadCoins() {
+        SharedPreferences prefs = getSharedPreferences("game_data", MODE_PRIVATE);
+        coins = prefs.getInt("coins", 0);
+    }
+
+    private void saveCoins() {
+        SharedPreferences prefs = getSharedPreferences("game_data", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("coins", coins);
+        editor.apply();
     }
 }
