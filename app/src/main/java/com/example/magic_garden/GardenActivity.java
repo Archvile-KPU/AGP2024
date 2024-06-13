@@ -19,6 +19,7 @@ public class GardenActivity extends AppCompatActivity {
     private GridLayout gardenGridLayout;
     private TextView coinsTextView;
     private Button restartGameButton;
+    private Button stageSelectionButton;
     private SharedPreferences prefs;
     private Map<String, Plant> plantsMap; // Map to store plants by their position
 
@@ -35,6 +36,7 @@ public class GardenActivity extends AppCompatActivity {
         gardenGridLayout = findViewById(R.id.gardenGridLayout);
         coinsTextView = findViewById(R.id.coinsTextView);
         restartGameButton = findViewById(R.id.restartGameButton);
+        stageSelectionButton = findViewById(R.id.stageSelectionButton);
 
         gardenGridLayout.setColumnCount(gridSize);
         gardenGridLayout.setRowCount(gridSize);
@@ -47,6 +49,7 @@ public class GardenActivity extends AppCompatActivity {
         initializeGardenGrid();
 
         restartGameButton.setOnClickListener(v -> restartGame());
+        stageSelectionButton.setOnClickListener(v -> goToStageSelection());
     }
 
     private void initializeGardenGrid() {
@@ -150,7 +153,14 @@ public class GardenActivity extends AppCompatActivity {
 
     private void restartGame() {
         saveCoins();  // Save coins before restarting the game
-        Intent intent = new Intent(GardenActivity.this, MainActivity.class);
+        Intent intent = new Intent(GardenActivity.this, StageSelectionActivity.class); // Change to StageSelectionActivity
+        startActivity(intent);
+        finish();  // Finish the current activity to prevent the user from going back
+    }
+
+    private void goToStageSelection() {
+        saveCoins();  // Save coins before going to stage selection
+        Intent intent = new Intent(GardenActivity.this, StageSelectionActivity.class);
         startActivity(intent);
         finish();  // Finish the current activity to prevent the user from going back
     }

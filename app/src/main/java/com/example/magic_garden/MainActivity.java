@@ -27,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private HashSet<String> dictionary = new HashSet<>();
     private int score = 0;  // Initialize the score at the beginning
     private int coins = 0;  // Initialize the coins
+    private int coinMultiplier;
+    private long gameTimeInMillis;
 
     // List to track selected letters' positions
     private ArrayList<int[]> selectedLetters = new ArrayList<>();
@@ -35,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Timer variables
     private CountDownTimer gameTimer;
-    private long gameTimeInMillis = 60000;  // 1 minute in milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
         setupEndGameButton();  // Set up the end game button
 
         loadCoins();  // Load coins from SharedPreferences
+
+        // Get stage information from the intent
+        Intent intent = getIntent();
+        gameTimeInMillis = intent.getLongExtra("TIME_LIMIT", 60000);
+        coinMultiplier = intent.getIntExtra("COIN_MULTIPLIER", 1);
 
         startGameTimer();  // Start the game timer
     }
@@ -206,8 +212,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void endGame() {
-        coins += score;  // Add the current score to coins
-        System.out.println("Game over! Coins earned: " + score);  // Debug message
+        coins += score * coinMultiplier;  // Add the current score to coins with multiplier
+        System.out.println("Game over! Coins earned: " + (score * coinMultiplier));  // Debug message
         saveCoins();  // Save coins to SharedPreferences
         Intent intent = new Intent(MainActivity.this, GardenActivity.class);
         intent.putExtra("COINS", coins);
