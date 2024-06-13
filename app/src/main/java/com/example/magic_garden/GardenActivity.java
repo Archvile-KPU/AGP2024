@@ -44,35 +44,35 @@ public class GardenActivity extends AppCompatActivity {
     }
 
     private void initializeGardenGrid() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();  // Clear any existing plant data to ensure garden is initially empty
+        editor.apply();
+
         for (int row = 0; row < gridSize; row++) {
             for (int col = 0; col < gridSize; col++) {
                 Button button = new Button(this);
-                button.setText(""); // Set initial text to blank
-                int finalRow = row;
-                int finalCol = col;
-                button.setOnClickListener(v -> plantItem(button, finalRow, finalCol));
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.rowSpec = GridLayout.spec(row);
                 params.columnSpec = GridLayout.spec(col);
+                params.width = 200;  // Set button width
+                params.height = 200; // Set button height
                 button.setLayoutParams(params);
+                button.setBackgroundResource(android.R.color.transparent); // Set initial background to transparent
+                int finalRow = row;
+                int finalCol = col;
+                button.setOnClickListener(v -> plantItem(button, finalRow, finalCol));
                 gardenGridLayout.addView(button);
-
-                // Load saved state for each button
-                boolean isPlanted = prefs.getBoolean("button_" + row + "_" + col, false);
-                if (isPlanted) {
-                    button.setText("*");
-                    button.setEnabled(false);
-                }
             }
         }
     }
 
     private void plantItem(Button button, int row, int col) {
-        int plantCost = 10; // Example cost for planting an item
+        int plantCost = 10; // Cost for planting an item
         if (coins >= plantCost) {
             coins -= plantCost;
             updateCoinsDisplay();
-            button.setText("*");
+            button.setBackgroundResource(R.drawable.grown_plant); // Change background to grown plant image
+            button.setText("*"); // Indicate planted state
             button.setEnabled(false);
             Toast.makeText(this, "Item planted!", Toast.LENGTH_SHORT).show();
 

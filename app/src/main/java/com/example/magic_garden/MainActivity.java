@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.TextView;
@@ -86,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView textView = new TextView(this);
                 textView.setText(String.valueOf(letters[row][col]));
                 textView.setTextSize(24);
+                textView.setTextColor(getResources().getColor(android.R.color.white));  // Set initial text color to white
                 textView.setPadding(20, 20, 20, 20);
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.rowSpec = GridLayout.spec(row);
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
             visited[row][col] = true;  // Mark this cell as visited
             currentWord.append(letters[row][col]);  // Append the letter to the current word
             selectedLetters.add(new int[]{row, col});  // Track the selected letter's position
-            textView.setTextColor(getResources().getColor(android.R.color.holo_blue_light));  // Change text color to indicate selection
+            textView.setTextColor(getResources().getColor(android.R.color.holo_blue_light));  // Change text color to blue to indicate selection
             updateCurrentWordView();  // Update the display to show the new current word
         }
     }
@@ -123,22 +123,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupEnterButton() {
         System.out.println("Setting up enter button...");  // Debug message
-        enterButton.setOnClickListener(new View.OnClickListener() {  // Ensure the correct usage of setOnClickListener
-            @Override
-            public void onClick(View v) {
-                System.out.println("Enter button clicked!");  // Debug message
-                String formedWord = currentWord.toString().toUpperCase();
-                if (isValidWord(formedWord)) {
-                    score += formedWord.length() * 5; // Update the score calculation
-                    System.out.println("Valid word: " + formedWord + ", Score: " + score);
-                    replaceSelectedLetters();  // Replace the letters used to form the word
-                } else {
-                    System.out.println("Invalid word: " + formedWord);
-                    resetGrid(false);  // Reset the grid without replacing letters
-                }
-                updateScoreDisplay();  // Update the score display
-                clearCurrentWord();  // Clear the current word in the TextView
+        enterButton.setOnClickListener(v -> {
+            System.out.println("Enter button clicked!");  // Debug message
+            String formedWord = currentWord.toString().toUpperCase();
+            if (isValidWord(formedWord)) {
+                score += formedWord.length() * 5; // Update the score calculation
+                System.out.println("Valid word: " + formedWord + ", Score: " + score);
+                replaceSelectedLetters();  // Replace the letters used to form the word
+            } else {
+                System.out.println("Invalid word: " + formedWord);
+                resetGrid(false);  // Reset the grid without replacing letters
             }
+            updateScoreDisplay();  // Update the score display
+            clearCurrentWord();  // Clear the current word in the TextView
         });
     }
 
@@ -155,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             letters[row][col] = newLetter;  // Update the letters array
             TextView textView = letterTextViews[row][col];
             textView.setText(String.valueOf(newLetter));  // Update the TextView with the new letter
-            textView.setTextColor(getResources().getColor(android.R.color.black));  // Reset text color
+            textView.setTextColor(getResources().getColor(android.R.color.white));  // Reset text color to white
             visited[row][col] = false;  // Reset visited status
             System.out.println("Updated (" + row + ", " + col + ") to " + newLetter);  // Debug message
         }
@@ -173,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 visited[i][j] = false;
                 TextView textView = letterTextViews[i][j];
                 textView.setEnabled(true);  // Ensure all TextViews are re-enabled
-                textView.setTextColor(getResources().getColor(android.R.color.black)); // Ensure color reset
+                textView.setTextColor(getResources().getColor(android.R.color.white)); // Ensure color reset to white
                 if (resetLetters) {
                     letters[i][j] = generateRandomLetter();
                     textView.setText(String.valueOf(letters[i][j]));  // Update the TextView with the new letter
@@ -202,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void endGame() {
-        coins += score;  // Add the current score to coins
+        coins += score;  // Set the coins to the current score
         System.out.println("Game over! Coins earned: " + coins);  // Debug message
         saveCoins();  // Save coins to SharedPreferences
         Intent intent = new Intent(MainActivity.this, GardenActivity.class);
