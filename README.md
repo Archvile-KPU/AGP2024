@@ -7,7 +7,7 @@ Term Project Repository for Android Game Programming.
 **Tech University of Korea**  
 **Dept. of Game & Multimedia Engineering**
 
-- **Date:** 04.04.2024
+- **Date:** 06.13.2024
 - **Student ID:** 2019180044
 - **Name:** Minkyu Ham
 - **Email:** archvile@tukorea.ac.kr
