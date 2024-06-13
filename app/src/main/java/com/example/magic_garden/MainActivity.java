@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView currentWordTextView;
     private TextView scoreTextView;
     private Button enterButton;
+    private Button endGameButton;
     private HashSet<String> dictionary = new HashSet<>();
     private int score = 0;  // Initialize the score at the beginning
     private int coins = 0;  // Initialize the coins
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         currentWordTextView = findViewById(R.id.currentWordTextView);
         scoreTextView = findViewById(R.id.scoreTextView);
         enterButton = findViewById(R.id.enterButton);
+        endGameButton = findViewById(R.id.endGameButton);
 
         gridLayout.setColumnCount(gridSize);
         gridLayout.setRowCount(gridSize);
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         initializeGrid();
         setupEnterButton();  // Ensure this method is called
+        setupEndGameButton();  // Set up the end game button
 
         loadCoins();  // Load coins from SharedPreferences
 
@@ -137,6 +140,10 @@ public class MainActivity extends AppCompatActivity {
             updateScoreDisplay();  // Update the score display
             clearCurrentWord();  // Clear the current word in the TextView
         });
+    }
+
+    private void setupEndGameButton() {
+        endGameButton.setOnClickListener(v -> endGame());
     }
 
     private void updateScoreDisplay() {
