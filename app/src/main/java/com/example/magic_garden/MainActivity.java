@@ -199,8 +199,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void endGame() {
-        coins += score;  // Set the coins to the current score
-        System.out.println("Game over! Coins earned: " + coins);  // Debug message
+        coins += score;  // Add the current score to coins
+        System.out.println("Game over! Coins earned: " + score);  // Debug message
         saveCoins();  // Save coins to SharedPreferences
         Intent intent = new Intent(MainActivity.this, GardenActivity.class);
         intent.putExtra("COINS", coins);
