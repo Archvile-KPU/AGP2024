@@ -9,6 +9,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class GardenActivity extends AppCompatActivity {
 
     private int gridSize = 5; // For example, a 5x5 grid
@@ -17,6 +20,7 @@ public class GardenActivity extends AppCompatActivity {
     private TextView coinsTextView;
     private Button restartGameButton;
     private SharedPreferences prefs;
+    private Map<String, Plant> plantsMap; // Map to store plants by their position
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class GardenActivity extends AppCompatActivity {
         gardenGridLayout.setRowCount(gridSize);
 
         prefs = getSharedPreferences("game_data", MODE_PRIVATE);
+        plantsMap = new HashMap<>(); // Initialize the map
 
         loadCoins(); // Load the saved coins
         updateCoinsDisplay();
@@ -58,7 +63,8 @@ public class GardenActivity extends AppCompatActivity {
                 int finalRow = row;
                 int finalCol = col;
                 button.setOnClickListener(v -> {
-                    if (button.getText().toString().equals("*")) {
+                    String key = finalRow + "_" + finalCol;
+                    if (plantsMap.containsKey(key)) {
                         sellPlant(button, finalRow, finalCol);  // Sell the plant if it is already planted
                     } else {
                         plantItem(button, finalRow, finalCol);  // Plant the item otherwise
@@ -69,7 +75,10 @@ public class GardenActivity extends AppCompatActivity {
                 // Load saved state for each button
                 boolean isPlanted = prefs.getBoolean("button_" + row + "_" + col, false);
                 if (isPlanted) {
-                    button.setBackgroundResource(R.drawable.grown_plant); // Set background to grown plant image
+                    long plantTime = prefs.getLong("plant_time_" + row + "_" + col, 0);
+                    Plant plant = new Plant(row, col, plantTime, this);
+                    plantsMap.put(row + "_" + col, plant);
+                    updatePlantImage(row, col, plant.getStage());
                     button.setText("*"); // Indicate planted state
                     button.setEnabled(true);  // Ensure the button is enabled for selling
                 }
@@ -82,31 +91,57 @@ public class GardenActivity extends AppCompatActivity {
         if (coins >= plantCost) {
             coins -= plantCost;
             updateCoinsDisplay();
-            button.setBackgroundResource(R.drawable.grown_plant); // Change background to grown plant image
+            long plantTime = System.currentTimeMillis();
+            Plant plant = new Plant(row, col, plantTime, this);
+            plantsMap.put(row + "_" + col, plant);
+            updatePlantImage(row, col, plant.getStage());
             button.setText("*"); // Indicate planted state
             Toast.makeText(this, "Item planted!", Toast.LENGTH_SHORT).show();
 
             // Save button state
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("button_" + row + "_" + col, true);
+            editor.putLong("plant_time_" + row + "_" + col, plantTime);
             editor.apply();
         } else {
             Toast.makeText(this, "Not enough coins!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void sellPlant(Button button, int row, int col) {
-        int sellPrice = 10; // Selling price for the plant
-        coins += sellPrice;
-        updateCoinsDisplay();
-        button.setBackgroundResource(android.R.color.transparent); // Change background to transparent
-        button.setText(""); // Remove the planted state indication
-        Toast.makeText(this, "Item sold!", Toast.LENGTH_SHORT).show();
+    public void updatePlantImage(int row, int col, int stage) {
+        Button button = (Button) gardenGridLayout.getChildAt(row * gridSize + col);
+        int[] plantImages = {
+                R.drawable.plant_stage_0,
+                R.drawable.plant_stage_1,
+                R.drawable.plant_stage_2,
+                R.drawable.plant_stage_3,
+                R.drawable.plant_stage_4,
+                R.drawable.plant_stage_5
+        };
+        button.setBackgroundResource(plantImages[stage]);
+    }
 
-        // Save button state
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("button_" + row + "_" + col, false);
-        editor.apply();
+    private void sellPlant(Button button, int row, int col) {
+        String key = row + "_" + col;
+        if (plantsMap.containsKey(key)) {
+            Plant plant = plantsMap.get(key);
+            int sellPrice = plant.getStage() * 10; // Selling price based on the stage
+            coins += sellPrice;
+            updateCoinsDisplay();
+            button.setBackgroundResource(android.R.color.transparent); // Change background to transparent
+            button.setText(""); // Remove the planted state indication
+            Toast.makeText(this, "Item sold for " + sellPrice + " coins!", Toast.LENGTH_SHORT).show();
+
+            // Remove plant from map and stop its growth
+            plant.stopGrowth();
+            plantsMap.remove(key);
+
+            // Save button state
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("button_" + row + "_" + col, false);
+            editor.remove("plant_time_" + row + "_" + col);
+            editor.apply();
+        }
     }
 
     private void updateCoinsDisplay() {
